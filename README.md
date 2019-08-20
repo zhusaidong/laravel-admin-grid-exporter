@@ -6,6 +6,8 @@
 
 列表显示什么，导出就是什么，妈妈再也不用担心我设置各种字段了。
 
+**该插件基于`Laravel-Excel 3.*`开发。所以在使用前请将laravel-admin升级到v1.6.12版本之后。**
+
 ### 安装使用
 
 > composer require zhusaidong/laravel-admin-grid-exporter
