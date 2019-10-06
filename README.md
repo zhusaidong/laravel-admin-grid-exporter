@@ -44,4 +44,5 @@ $exporter->setFileName('导出文件名.xlsx')；
 
 ```php
 $exporter->setExclusions(['排除列1','排除列2']);
+$exporter->setExclusion('排除列3');
 ```
