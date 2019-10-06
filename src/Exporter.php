@@ -110,7 +110,7 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 	/**
 	 * 排除项
 	 *
-	 * @param array $excludes
+	 * @param array $exclusions
 	 *
 	 * @return Exporter
 	 */
@@ -124,7 +124,7 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 	/**
 	 * 排除项
 	 *
-	 * @param array $excludes
+	 * @param string $exclusion
 	 *
 	 * @return Exporter
 	 */
