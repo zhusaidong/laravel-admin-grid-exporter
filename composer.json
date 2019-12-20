@@ -13,6 +13,7 @@
     ],
     "require": {
         "php": ">=7.0.0",
+        "maatwebsite/excel": "^3.0",
         "encore/laravel-admin": "~1.6"
     },
     "require-dev": {
