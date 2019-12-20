@@ -9,6 +9,11 @@ namespace Zhusaidong\GridExporter;
 
 use Encore\Admin\Grid;
 use Encore\Admin\Grid\Column;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Exception;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Encore\Admin\Grid\Exporters\AbstractExporter;
 use Encore\Admin\Grid\Row;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,8 +21,9 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 
-class Exporter extends AbstractExporter implements FromCollection, WithHeadings
+class Exporter extends AbstractExporter implements FromCollection, WithHeadings, ShouldAutoSize, WithCustomValueBinder, WithEvents
 {
 	use Exportable;
 	/**
@@ -32,6 +38,10 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 	 * @var array $exclusions 排除项
 	 */
 	private $exclusions = [];
+	/**
+	 * @var array $registerEvents
+	 */
+	private $registerEvents = [];
 	
 	/**
 	 * @inheritDoc
@@ -43,12 +53,12 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 			return $this->columns;
 		}
 		
-		$this->exclusions = collect($this->exclusions)->map(function($exclusion)
+		$this->exclusions = collect($this->exclusions)->map(static function($exclusion)
 		{
 			return Str::snake($exclusion);
 		});
 		
-		$this->columns = $this->grid->visibleColumns()->mapWithKeys(function(Column $column)
+		$this->columns = $this->grid->visibleColumns()->mapWithKeys(static function(Column $column)
 		{
 			return [$column->getName() => $column->getLabel()];
 		})->except($this->exclusions);
@@ -87,6 +97,25 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 		$this->download($this->fileName)->prepare(request())->send();
 		
 		exit;
+	}
+	
+	/**
+	 * @inheritDoc
+	 * @throws Exception
+	 */
+	public function bindValue(Cell $cell, $value)
+	{
+		$cell->setValueExplicit($value, DataType::TYPE_STRING);
+		
+		return true;
+	}
+	
+	/**
+	 * @inheritDoc
+	 */
+	public function registerEvents() : array
+	{
+		return $this->registerEvents;
 	}
 	
 	/**
@@ -136,17 +165,25 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings
 	}
 	
 	/**
+	 * @param array $registerEvents
+	 */
+	public function setRegisterEvents(array $registerEvents) : void
+	{
+		$this->registerEvents = $registerEvents;
+	}
+	
+	/**
 	 * 获取 Grid exporter
 	 *
 	 * @param Grid $grid
 	 *
 	 * @return NULL|Exporter
 	 */
-	public static function get(Grid $grid)
+	public static function get(Grid $grid) : ?Exporter
 	{
 		return (function()
 		{
-			return $this->exporter instanceof Exporter ? $this->exporter : NULL;
+			return $this->exporter instanceof Exporter ? $this->exporter : null;
 		})->call($grid);
 	}
 }
