@@ -45,7 +45,7 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
     private $registerEvents = [];
 
     protected $htmlEntities = [
-        '&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;', '&cent;', '&pound;', '&yen;', '&euro;', '&sect;', '&copy;', '&reg;', '&trade;', '&times;', '&divide;'
+        '&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;', '&cent;', '&pound;', '&yen;', '&euro;', '&sect;', '&copy;', '&reg;', '&trade;', '&times;', '&divide;','\\n'
     ];
 
     /**
@@ -81,7 +81,7 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
         foreach ($this->grid->rows() as $row) {
             $data = [];
             foreach ($this->columns as $key => $column) {
-                $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>/iUs', '', $row->column($key)))));
+                $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $row->column($key)))));
             }
             $lists[] = $data;
         }
