@@ -45,7 +45,7 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
     private $registerEvents = [];
 
     protected $htmlEntities = [
-        '&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;', '&cent;', '&pound;', '&yen;', '&euro;', '&sect;', '&copy;', '&reg;', '&trade;', '&times;', '&divide;','\\n'
+        '&nbsp;', '&lt', '&gt;', '&amp;', '&quot;', '&cent;', '&pound;', '&yen;', '&euro;', '&sect;', '&copy;', '&reg;', '&trade;', '&times;', '&divide;'
     ];
 
     /**
@@ -74,18 +74,33 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
     public function collection()
     {
         $lists = [];
-        $this->grid->build();
-        /**
-         * @var Row $row
-         */
-        foreach ($this->grid->rows() as $row) {
-            $data = [];
-            foreach ($this->columns as $key => $column) {
-                $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $row->column($key)))));
+        $this->chunk(function ($collection) use (&$lists) {
+            Column::setOriginalGridModels($collection);
+            $original = $current = $collection->toArray();
+            $this->grid->getColumns()->map(function (Column $column) use (&$current) {
+                $current = $column->fill($current);
+            });
+            foreach ($current as $row) {
+                $data = [];
+                foreach ($this->columns as $key => $column) {
+                    if (strstr($key, '.')) {
+                        $name = explode('.', $key);
+                        if (count($name) === 2) {
+                            $data[$column] = self::strFilter($this->htmlEntities, $row[$name[0]][$name[1]]);
+                            continue;
+                        }
+                        if (count($name) === 3) {
+                            $data[$column] = self::strFilter($this->htmlEntities, $row[$name[0]][$name[1]][$name[2]]);
+                            continue;
+                        }
+                        $data[$column] = '';
+                        continue;
+                    };
+                    $data[$column] = self::strFilter($this->htmlEntities, $row[$key]);
+                }
+                $lists[] = $data;
             }
-            $lists[] = $data;
-        }
-
+        });
         return new Collection($lists);
     }
 
@@ -183,5 +198,19 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
         return (function () {
             return $this->exporter instanceof Exporter ? $this->exporter : null;
         })->call($grid);
+    }
+
+    /**
+     * 过滤函数
+     * @param array $filter
+     * @param string $str
+     * @return string
+     */
+    protected static function strFilter(array $filter, string $str): string
+    {
+        if ($str == '') {
+            return '';
+        }
+        return trim(str_replace($filter, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $str))));
     }
 }
