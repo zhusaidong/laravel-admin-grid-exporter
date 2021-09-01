@@ -86,29 +86,17 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
                     if (strstr($key, '.')) {
                         $name = explode('.', $key);
                         if (count($name) === 2) {
-                            if ($row[$name[0]][$name[1]] == '') {
-                                $data[$column] = '';
-                                continue;
-                            }
-                            $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $row[$name[0]][$name[1]]))));
+                            $data[$column] = self::strFilter($this->htmlEntities, $row[$name[0]][$name[1]]);
                             continue;
                         }
                         if (count($name) === 3) {
-                            if ($row[$name[0]][$name[1]][$name[2]] == '') {
-                                $data[$column] = '';
-                                continue;
-                            }
-                            $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $row[$name[0]][$name[1]][$name[2]]))));
+                            $data[$column] = self::strFilter($this->htmlEntities, $row[$name[0]][$name[1]][$name[2]]);
                             continue;
                         }
                         $data[$column] = '';
                         continue;
                     };
-                    if ($row[$key] == '') {
-                        $data[$column] = '';
-                        continue;
-                    }
-                    $data[$column] = trim(str_replace($this->htmlEntities, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $row[$key]))));
+                    $data[$column] = self::strFilter($this->htmlEntities, $row[$key]);
                 }
                 $lists[] = $data;
             }
@@ -210,5 +198,19 @@ class Exporter extends AbstractExporter implements FromCollection, WithHeadings,
         return (function () {
             return $this->exporter instanceof Exporter ? $this->exporter : null;
         })->call($grid);
+    }
+
+    /**
+     * 过滤函数
+     * @param array $filter
+     * @param string $str
+     * @return string
+     */
+    protected static function strFilter(array $filter, string $str): string
+    {
+        if ($str == '') {
+            return '';
+        }
+        return trim(str_replace($filter, '', strip_tags(preg_replace(/** @lang text */ '/<script(.*)>(.*)<\/script>|<template(.*)>(.*)<\/template>/iUs', '', $str))));
     }
 }
